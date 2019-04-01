@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -17,22 +18,24 @@ public class TwoSocketServer {
         Socket socket=serverSocket.accept();
         System.out.println("成功建立连接");
 //        建立好连接，从socket中获取输入流，建立缓冲区进行读取
-        Scanner sc=new Scanner(System.in);
-        InputStream inputStream=socket.getInputStream();
-        byte[] bytes=new byte[1024];
-        int len;
-        StringBuilder sb=new StringBuilder();
-        while((len=inputStream.read(bytes))!=-1){
-//            注意指定编码格式，发送，接受格式要统一
-            sb.append(new String(bytes,0,len,"UTF-8"));
+        PrintWriter pwtoclient=new PrintWriter(socket.getOutputStream());
+        pwtoclient.println("已成功连接到服务器！请你先发言");
+        pwtoclient.flush();
+        Scanner kbsc=new Scanner(System.in);
+        Scanner insc=new Scanner(socket.getInputStream());
+        while(insc.hasNextLine()){
+            String indata=insc.nextLine();
+            System.out.println("客户端："+indata);
+            System.out.print("我（服务端）：");
+            String kbdata=kbsc.nextLine();
+            System.out.println("我（服务端）："+kbdata);
+            pwtoclient.println(kbdata);
+            pwtoclient.flush();
         }
-        System.out.println("Get message from Client:"+sb);
-
-        OutputStream outputStream=socket.getOutputStream();
-        outputStream.write("Hello Client!我已经收到你的消息了".getBytes("UTF-8"));
-
-        inputStream.close();
-        outputStream.close();
+//        System.out.println("Get message from Client:"+sb);
+        kbsc.close();
+        insc.close();
+        pwtoclient.close();
         serverSocket.close();
         socket.close();
     }
